@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>♚ Lichess – Open Source Clone</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js">
+    </script>
+
+    <style>
+        /* ────────────── LICHESS OPEN SOURCE STYLES ────────────── */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
+
+        /* ── Reset & Base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-body: #312e2b;
+            --bg-board: #302e2b;
+            --bg-card: #262421;
+            --bg-card-alt: #1e1c1a;
+            --bg-input: #3d3a36;
+            --border-color: #4a4744;
+            --text-primary: #e8e8e8;
+            --text-secondary: #bababa;
+            --text-muted: #888;
+            --text-accent: #ffd966;
+            --link-color: #6a8cff;
+            --green: #629924;
+            --green-hover: #74ac2e;
+            --red: #b33a3a;
+            --red-hover: #cc4444;
+            --gold: #b8860b;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius: 8px;
+            --font: 'Noto Sans', 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-body);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 50% 0%, #3d3a36 0%, #1a1816 100%);
+        }
+
+        /* ── App Container ── */
+        .app {
+            max-width: 1480px;
+            width: 100%;
+            background: var(--bg-board);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px 28px 28px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            border: 1px solid #3d3a36;
+        }
+
+        /* ── Left Column: Board ── */
+        .board-section {
+            flex: 1 1 580px;
+            min-width: 340px;
+        }
+
+        .board-wrapper {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px var(--border-color);
+        }
+
+        #board {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        /* ── chessboard.js Override — Lichess Wood Theme ── */
+        .chessboard-1-0-0 .white-1e1d7 {
+            background-color: #f0d9b5;
+        }
+        .chessboard-1-0-0 .black-3c85d {
+            background-color: #b58863;
+        }
+        .chessboard-1-0-0 .highlight1-32417 {
+            background-color: rgba(255, 255, 150, 0.45);
+        }
+        .chessboard-1-0-0 .highlight2-9c5d2 {
+            background-color: rgba(255, 100, 100, 0.25);
+        }
+        .chessboard-1-0-0 .square-55d63 {
+            position: relative;
+            cursor: pointer;
+        }
+        .chessboard-1-0-0 .piece-417db {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            transition: transform 0.08s ease;
+        }
+        .chessboard-1-0-0 .piece-417db:hover {
+            transform: scale(1.04);
+        }
+
+        /* ── Coordinates ── */
+        .coords {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+            user-select: none;
+            font-family: var(--font);
+        }
+        .coords.files {
+            bottom: 2px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .coords.ranks {
+            top: 10px;
+            bottom: 10px;
+            left: 2px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ── Board Controls Bar ── */
+        .board-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            align-items: center;
+        }
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: var(--bg-input);
+            border: none;
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.08s, box-shadow 0.15s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--font);
+            border: 1px solid transparent;
+        }
+        .btn:hover {
+            background: #4f4b46;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-primary {
+            background: var(--green);
+            color: #fff;
+            border-color: #5a8a20;
+        }
+        .btn-primary:hover {
+            background: var(--green-hover);
+        }
+        .btn-danger {
+            background: var(--red);
+            color: #fff;
+            border-color: #9e2f2f;
+        }
+        .btn-danger:hover {
+            background: var(--red-hover);
+        }
+        .btn-warning {
+            background: var(--gold);
+            color: #fff;
+            border-color: #a0700a;
+        }
+        .btn-warning:hover {
+            background: #d49a12;
+        }
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border-color);
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: var(--bg-input);
+        }
+        .btn-sm {
+            font-size: 12px;
+            padding: 4px 10px;
+        }
+
+        .status-badge {
+            background: var(--bg-input);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            margin-left: auto;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-badge .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse-dot 1.2s infinite;
+        }
+        .status-badge .dot.black-dot {
+            background: #888;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* ── Settings row ── */
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+        .settings-row label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .settings-row select,
+        .settings-row input[type="number"] {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: var(--font);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s;
+            min-height: 32px;
+        }
+        .settings-row select:focus,
+        .settings-row input:focus {
+            border-color: var(--link-color);
+        }
+        .settings-row select option {
+            background: var(--bg-card);
+        }
+        .settings-row input[type="number"] {
+            width: 60px;
+        }
+        .settings-row .inline-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* ── Right Sidebar ── */
+        .sidebar {
+            flex: 0 0 330px;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Player cards */
+        .player {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 10px 16px;
+            border-left: 4px solid var(--green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s, background 0.2s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+        .player.black-player {
+            border-left-color: #666;
+        }
+        .player.active {
+            background: #2f2c29;
+            border-left-color: var(--text-accent);
+            box-shadow: inset 0 0 0 1px #4a4744;
+        }
+        .player .info {
+            display: flex;
+            flex-direction: column;
+        }
+        .player .name {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .player .name .title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .player .rating {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .player .clock {
+            font-size: 26px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            background: var(--bg-card-alt);
+            padding: 2px 14px;
+            border-radius: 4px;
+            color: var(--text-primary);
+            min-width: 84px;
+            text-align: center;
+            font-family: 'Noto Sans', monospace;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .player.active .clock {
+            border-color: var(--text-accent);
+            color: var(--text-accent);
+        }
+        .player .clock.low {
+            color: #e74c3c !important;
+            border-color: #e74c3c !important;
+            animation: pulse-clock 1s infinite;
+        }
+        @keyframes pulse-clock {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Moves panel */
+        .moves-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            flex: 1;
+            min-height: 160px;
+            max-height: 260px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+        .moves-panel .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+        .moves-panel .header .actions button {
+            background: none;
+            border: none;
+            color: var(--link-color);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 0 4px;
+            font-family: var(--font);
+        }
+        .moves-panel .header .actions button:hover {
+            color: #8aa4ff;
+            text-decoration: underline;
+        }
+        .moves-list {
+            overflow-y: auto;
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            padding-right: 4px;
+            font-feature-settings: "tnum";
+        }
+        .moves-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .moves-list::-webkit-scrollbar-track {
+            background: var(--bg-card-alt);
+        }
+        .moves-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .move-row {
+            display: flex;
+            gap: 6px;
+            padding: 1px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.1s;
+        }
+        .move-row:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .move-row .move-num {
+            color: var(--text-muted);
+            min-width: 28px;
+            text-align: right;
+            font-weight: 400;
+            font-size: 12px;
+        }
+        .move-row .move-text {
+            color: var(--text-primary);
+            font-weight: 400;
+        }
+        .move-row .move-text.white-move {
+            color: #eee;
+        }
+        .move-row .move-text.black-move {
+            color: #aaa;
+        }
+        .move-row .move-text.current {
+            background: rgba(98, 153, 36, 0.2);
+            border-radius: 2px;
+            padding: 0 4px;
+            font-weight: 600;
+        }
+
+        /* Analysis box */
+        .analysis-box {
+            background: var(--bg-card-alt);
+            border-radius: var(--radius);
+            padding: 10px 14px;
+            min-height: 64px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow-y: auto;
+            max-height: 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .analysis-box .eval {
+            color: var(--text-accent);
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .analysis-box .best-move {
+            color: var(--link-color);
+            font-weight: 600;
+        }
+        .analysis-box .line {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .analysis-box .empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ── Promotion Dialog ── */
+        .promotion-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .promotion-dialog.active {
+            display: flex;
+        }
+        .promotion-choices {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px 30px;
+            display: flex;
+            gap: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        .promotion-choices .piece-choice {
+            width: 72px;
+            height: 72px;
+            background: var(--bg-card-alt);
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border 0.2s, transform 0.1s, background 0.2s;
+        }
+        .promotion-choices .piece-choice:hover {
+            border-color: var(--green);
+            background: #3d3a36;
+            transform: scale(1.06);
+        }
+        .promotion-choices .piece-choice img {
+            width: 56px;
+            height: 56px;
+        }
+
+        /* ── Import Modal ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 640px;
+            width: 92%;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        .modal-box h3 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .modal-box textarea {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: var(--radius);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .modal-box textarea:focus {
+            border-color: var(--link-color);
+        }
+        .modal-box .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: flex-end;
+        }
+        .modal-box .actions .btn {
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 920px) {
+            .app {
+                flex-direction: column;
+                padding: 16px;
+            }
+            .sidebar {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .moves-panel {
+                max-height: 150px;
+                min-height: 100px;
+            }
+            .board-section {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .status-badge {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
+            .board-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-group {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .settings-row {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .app {
+                padding: 10px;
+                border-radius: 6px;
+            }
+            .player .clock {
+                font-size: 20px;
+                min-width: 60px;
+                padding: 2px 8px;
+            }
+            .btn {
+                font-size: 12px;
+                padding: 4px 10px;
+            }
+            .promotion-choices .piece-choice {
+                width: 56px;
+                height: 56px;
+            }
+            .promotion-choices .piece-choice img {
+                width: 42px;
+                height: 42px;
+            }
+            .modal-box {
+                padding: 16px;
+            }
+            .modal-box textarea {
+                height: 140px;
+            }
+            .coords {
+                display: none;
+            }
+        }
+
+        /* ── Scrollbar for analysis ── */
+        .analysis-box::-webkit-scrollbar {
+            width: 3px;
+        }
+        .analysis-box::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* ── Misc ── */
+        .flex-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .text-muted {
+            color: var(--text-muted);
+        }
+        .text-accent {
+            color: var(--text-accent);
+        }
+        .gap-2 {
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── APP ─── -->
+    <div class="app" id="app">
+
+        <!-- ─── LEFT COLUMN ─── -->
+        <div class="board-section">
+            <div class="board-wrapper" id="boardWrapper">
+                <div id="board"></div>
+                <div class="coords files" id="fileCoords"></div>
+                <div class="coords ranks" id="rankCoords"></div>
+            </div>
+
+            <!-- Controls -->
+            <div class="board-controls">
+                <div class="btn-group">
+                    <button class="btn" id="btnFlip">🔄 Flip</button>
+                    <button class="btn" id="btnUndo">↩ Undo</button>
+                    <button class="btn btn-danger" id="btnResign">🏳 Resign</button>
+                    <button class="btn btn-warning" id="btnDraw">🤝 Draw</button>
+                    <button class="btn btn-primary" id="btnNew">✕ New</button>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-outline btn-sm" id="btnPGN">📋 PGN</button>
+                    <button class="btn btn-outline btn-sm" id="btnImportPGN">📥 Import</button>
+                    <button class="btn btn-outline btn-sm" id="btnAnalyze">🔍 Analyze</button>
+                </div>
+                <div class="status-badge" id="statusBadge">
+                    <span class="dot" id="statusDot"></span>
+                    <span id="statusText">White to move</span>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-row">
+                <label>Time</label>
+                <select id="timeControl">
+                    <option value="60,0">Bullet (1+0)</option>
+                    <option value="180,2" selected>Blitz (3+2)</option>
+                    <option value="600,0">Rapid (10+0)</option>
+                    <option value="900,15">Classical (15+10)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <span id="customTimeInputs" style="display:none;display:inline-flex;gap:4px;align-items:center;">
+                    <input type="number" id="minutesInput" value="10" min="1" style="width:52px;" />
+                    <span style="color:var(--text-muted);font-size:12px;">+</span>
+                    <input type="number" id="incrementInput" value="5" min="0" style="width:52px;" />
+                    <span style="color:var(--text-muted);font-size:12px;">s</span>
+                </span>
+                <label>AI</label>
+                <select id="aiLevel">
+                    <option value="1">1 (Easy)</option>
+                    <option value="5">5 (Medium)</option>
+                    <option value="10" selected>10 (Hard)</option>
+                    <option value="15">15 (Expert)</option>
+                    <option value="20">20 (Stockfish)</option>
+                </select>
+                <label>Theme</label>
+                <select id="pieceTheme">
+                    <option value="merida">Merida</option>
+                    <option value="alpha">Alpha</option>
+                    <option value="cburnett">CBurnett</option>
+                    <option value="chesnut">Chesnut</option>
+                </select>
+                <button class="btn btn-outline btn-sm" id="btnApplyTheme">Apply</button>
+            </div>
+        </div>
+
+        <!-- ─── RIGHT COLUMN ─── -->
+        <div class="sidebar">
+
+            <!-- White Player -->
+            <div class="player active" id="whitePlayer">
+                <div class="info">
+                    <span class="name">♔ White <span class="title">(You)</span></span>
+                    <span class="rating">Rating 1847</span>
+                </div>
+                <div class="clock" id="whiteClock">10:00</div>
+            </div>
+
+            <!-- Black Player -->
+            <div class="player black-player" id="blackPlayer">
+                <div class="info">
+                    <span class="name">♚ Black <span class="title">(AI)</span></span>
+                    <span class="rating">Stockfish 10</span>
+                </div>
+                <div class="clock" id="blackClock">10:00</div>
+            </div>
+
+            <!-- Moves -->
+            <div class="moves-panel">
+                <div class="header">
+                    <span>Moves (<span id="moveCount">0</span>)</span>
+                    <div class="actions">
+                        <button id="btnScrollToEnd">⤵ End</button>
+                    </div>
+                </div>
+                <div class="moves-list" id="movesList"></div>
+            </div>
+
+            <!-- Analysis -->
+            <div class="analysis-box" id="analysisBox">
+                <span class="empty">♟ Make a move to see analysis.</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─── PROMOTION DIALOG ─── -->
+    <div class="promotion-dialog" id="promotionDialog">
+        <div class="promotion-choices" id="promotionChoices"></div>
+    </div>
+
+    <!-- ─── IMPORT PGN MODAL ─── -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal-box">
+            <h3>📥 Import PGN</h3>
+            <textarea id="pgnInput" placeholder="Paste PGN here …"></textarea>
+            <div class="actions">
+                <button class="btn btn-outline" id="importCancel">Cancel</button>
+                <button class="btn btn-primary" id="importConfirm">Load Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <!-- ─── JAVASCRIPT — FULL LICHESS CLONE ──────────────────── -->
+    <!-- ──────────────────────────────────────────────────────────── -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── DOM REFS ───
+            const boardEl = document.getElementById('board');
+            const statusBadge = document.getElementById('statusBadge');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const movesListEl = document.getElementById('movesList');
+            const moveCountEl = document.getElementById('moveCount');
+            const whiteClockEl = document.getElementById('whiteClock');
+            const blackClockEl = document.getElementById('blackClock');
+            const whitePlayerEl = document.getElementById('whitePlayer');
+            const blackPlayerEl = document.getElementById('blackPlayer');
+            const analysisBox = document.getElementById('analysisBox');
+            const promotionDialog = document.getElementById('promotionDialog');
+            const promotionChoices = document.getElementById('promotionChoices');
+            const importModal = document.getElementById('importModal');
+            const pgnInput = document.getElementById('pgnInput');
+
+            // ─── STATE ───
+            let game = new Chess();
+            let board = null;
+            let moveHistory = [];
+            let gameOver = false;
+            let currentTurn = 'w';
+            let whiteTime = 180;
+            let blackTime = 180;
+            let increment = 2;
+            let clockInterval = null;
+            let stockfish = null;
+            let analysisMode = false;
+            let isAIThinking = false;
+            let aiLevel = 10;
+            let aiColor = 'b';
+            let playerColor = 'w';
+            let lastMove = null;
+            let selectedSquare = null;
+            let pieceThemeMap = {
+                merida: 'https://lichess1.org/assets/piece/merida/',
+                alpha: 'https://lichess1.org/assets/piece/alpha/',
+                cburnett: 'https://lichess1.org/assets/piece/cburnett/',
+                chesnut: 'https://lichess1.org/assets/piece/chesnut/'
+            };
+            let currentPieceSet = 'merida';
+
+            // ─── CLOCKS ───
+            function formatTime(sec) {
+                if (sec < 0) sec = 0;
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60);
+                return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+
+            function updateClocks() {
+                whiteClockEl.textContent = formatTime(whiteTime);
+                blackClockEl.textContent = formatTime(blackTime);
+                whiteClockEl.classList.toggle('low', whiteTime < 60);
+                blackClockEl.classList.toggle('low', blackTime < 60);
+            }
+
+            function stopClock() {
+                if (clockInterval) {
+                    clearInterval(clockInterval);
+                    clockInterval = null;
+                }
+            }
+
+            function startClock() {
+                stopClock();
+                clockInterval = setInterval(() => {
+                    if (gameOver) {
+                        stopClock();
+                        return;
+                    }
+                    if (currentTurn === 'w') {
+                        whiteTime = Math.max(0, whiteTime - 1);
+                    } else {
+                        blackTime = Math.max(0, blackTime - 1);
+                    }
+                    updateClocks();
+                    if (whiteTime === 0 || blackTime === 0) {
+                        stopClock();
+                        const winner = whiteTime === 0 ? 'Black' : 'White';
+                        setStatus(`⏰ ${winner} wins on time!`, true);
+                        gameOver = true;
+                        playSound('gameEnd');
+                    }
+                }, 1000);
+            }
+
+            function switchClock() {
+                currentTurn = game.turn();
+                whitePlayerEl.classList.toggle('active', currentTurn === 'w');
+                blackPlayerEl.classList.toggle('active', currentTurn === 'b');
+                if (!gameOver) startClock();
+                updateStatusDisplay();
+            }
+
+            function addIncrement(color) {
+                if (color === 'w') whiteTime += increment;
+                else blackTime += increment;
+                updateClocks();
+            }
+
+            // ─── STATUS ───
+            function setStatus(msg, isGameOver = false) {
+                statusText.textContent = msg;
+                if (isGameOver) {
+                    statusDot.className = 'dot';
+                    statusDot.style.background = '#888';
+                    statusDot.style.animation = 'none';
+                } else {
+                    const isWhite = game.turn() === 'w';
+                    statusDot.className = 'dot' + (isWhite ? '' : ' black-dot');
+                    statusDot.style.background = isWhite ? 'var(--green)' : '#888';
+                    statusDot.style.animation = '';
+                }
+            }
+
+            function updateStatusDisplay() {
+                if (gameOver) return;
+                const turn = game.turn() === 'w' ? 'White' : 'Black';
+                let extra = '';
+                if (game.in_check()) extra = ' (Check!)';
+                setStatus(`${turn} to move${extra}`);
+            }
+
+            // ─── SOUND ───
+            function playSound(type) {
+                try {
+                    const ctx = new(window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    gain.gain.value = 0.08;
+                    if (type === 'move') {
+                        osc.frequency.value = 600;
+                        osc.start();
+                        setTimeout(() => osc.stop(), 80);
+                    } else if (type === 'capture') {
+                        osc.frequency.value = 320;
+                        osc.start();
+                        setTimeout(() => osc.stop(), 120);
+                    } else if (type === 'check') {
+                        osc.frequency.value = 880;
+                        osc.start();
+                        setTimeout(() => osc.stop(), 160);
+                    } else if (type === 'gameEnd') {
+                        osc.frequency.value = 220;
+                        osc.start();
+                        setTimeout(() => { osc.frequency.value = 440;
+                            setTimeout(() => osc.stop(), 180); }, 180);
+                    }
+                } catch (_) { /* no sound */ }
+            }
+
+            // ─── BOARD SETUP ───
+            function getPieceUrl(piece) {
+                const codes = {
+                    wP: 'wP',
+                    wN: 'wN',
+                    wB: 'wB',
+                    wR: 'wR',
+                    wQ: 'wQ',
+                    wK: 'wK',
+                    bP: 'bP',
+                    bN: 'bN',
+                    bB: 'bB',
+                    bR: 'bR',
+                    bQ: 'bQ',
+                    bK: 'bK'
+                };
+                return `${pieceThemeMap[currentPieceSet]}${codes[piece] || 'wP'}.svg`;
+            }
+
+            function initBoard() {
+                if (board) board.destroy();
+                const config = {
+                    draggable: true,
+                    position: 'start',
+                    onDragStart: onDragStart,
+                    onDrop: onDrop,
+                    onSnapEnd: onSnapEnd,
+                    pieceTheme: getPieceUrl
+                };
+                board = Chessboard('board', config);
+                renderCoords();
+            }
+
+            function renderCoords() {
+                const files = 'abcdefgh'.split('');
+                const ranks = '87654321'.split('');
+                document.getElementById('fileCoords').innerHTML = files.map(f => `<span>${f}</span>`).join('');
+                document.getElementById('rankCoords').innerHTML = ranks.map(r => `<span>${r}</span>`).join('');
+            }
+
+            function applyPieceTheme() {
+                const theme = document.getElementById('pieceTheme').value;
+                currentPieceSet = theme;
+                initBoard();
+                board.position(game.fen());
+                renderMoves();
+                highlightLegalMoves();
+            }
+
+            // ─── DRAG & DROP ───
+            function onDragStart(source, piece) {
+                if (gameOver) return false;
+                if (isAIThinking) return false;
+                if (game.turn() !== playerColor) return false;
+                if (game.turn() === 'w' && piece.startsWith('b')) return false;
+                if (game.turn() === 'b' && piece.startsWith('w')) return false;
+                return true;
+            }
+
+            function onDrop(source, target) {
+                const piece = game.get(source);
+                if (piece && piece.type === 'p') {
+                    const row = target[1];
+                    if ((piece.color === 'w' && row === '8') || (piece.color === 'b' && row === '1')) {
+                        showPromotionDialog(source, target);
+                        return 'snapback';
+                    }
+                }
+                const move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) return 'snapback';
+                handleMove(move);
+            }
+
+            function onSnapEnd() {
+                highlightLegalMoves();
+            }
+
+            // ─── PROMOTION ───
+            function showPromotionDialog(source, target) {
+                promotionDialog.classList.add('active');
+                promotionChoices.innerHTML = '';
+                const color = game.turn();
+                const pieces = ['q', 'r', 'b', 'n'];
+                pieces.forEach(p => {
+                    const img = document.createElement('img');
+                    const code = color === 'w' ? `w${p.toUpperCase()}` : `b${p.toUpperCase()}`;
+                    img.src = getPieceUrl(code);
+                    img.alt = p;
+                    img.style.width = '56px';
+                    img.style.height = '56px';
+                    const div = document.createElement('div');
+                    div.className = 'piece-choice';
+                    div.appendChild(img);
+                    div.addEventListener('click', () => {
+                        promotionDialog.classList.remove('active');
+                        const move = game.move({ from: source, to: target, promotion: p });
+                        if (move) handleMove(move);
+                        else board.position(game.fen());
+                    });
+                    promotionChoices.appendChild(div);
+                });
+            }
+
+            // ─── HANDLE MOVE ───
+            function handleMove(move) {
+                lastMove = move;
+                moveHistory.push(move);
+                board.position(game.fen());
+                renderMoves();
+                addIncrement(move.color);
+                switchClock();
+                updateClocks();
+
+                if (game.in_check()) playSound('check');
+                else if (move.captured) playSound('capture');
+                else playSound('move');
+
+                if (game.game_over()) {
+                    stopClock();
+                    gameOver = true;
+                    let msg = '';
+                    if (game.in_checkmate()) {
+                        const winner = game.turn() === 'w' ? 'Black' : 'White';
+                        msg = `♚ ${winner} wins by checkmate!`;
+                        playSound('gameEnd');
+                    } else if (game.in_draw()) {
+                        msg = '🤝 Draw!';
+                        playSound('gameEnd');
+                    } else if (game.in_stalemate()) {
+                        msg = '🤝 Stalemate!';
+                        playSound('gameEnd');
+                    } else {
+                        msg = '🏁 Game over.';
+                    }
+                    setStatus(msg, true);
+                    return;
+                }
+
+                if (analysisMode) runStockfishAnalysis();
+
+                if (!gameOver && game.turn() === aiColor) {
+                    scheduleAIMove();
+                }
+            }
+
+            // ─── AI MOVE ───
+            function scheduleAIMove() {
+                if (isAIThinking || gameOver) return;
+                isAIThinking = true;
+                setStatus('🤖 AI thinking …');
+                setTimeout(() => {
+                    if (gameOver || game.turn() !== aiColor) {
+                        isAIThinking = false;
+                        return;
+                    }
+                    const level = parseInt(document.getElementById('aiLevel').value);
+                    const moves = game.moves({ verbose: true });
+                    if (moves.length === 0) { isAIThinking = false; return; }
+
+                    if (level > 1) {
+                        if (!stockfish) initStockfish();
+                        stockfish.postMessage('ucinewgame');
+                        stockfish.postMessage('position fen ' + game.fen());
+                        stockfish.postMessage(`go depth ${Math.min(level, 20)}`);
+                        window._aiResolve = (moveStr) => {
+                            isAIThinking = false;
+                            if (moveStr && !gameOver) {
+                                const result = game.move(moveStr);
+                                if (result) handleMove(result);
+                                else { const fallback = moves[Math.floor(Math.random() * moves.length)];
+                                    handleMove(fallback); }
+                            } else {
+                                const fallback = moves[Math.floor(Math.random() * moves.length)];
+                                if (fallback) handleMove(fallback);
+                            }
+                        };
+                        setTimeout(() => {
+                            if (isAIThinking) {
+                                isAIThinking = false;
+                                const fallback = moves[Math.floor(Math.random() * moves.length)];
+                                if (fallback) handleMove(fallback);
+                            }
+                        }, 3500);
+                    } else {
+                        const rand = moves[Math.floor(Math.random() * moves.length)];
+                        isAIThinking = false;
+                        if (rand) handleMove(rand);
+                    }
+                }, 200);
+            }
+
+            // ─── STOCKFISH ───
+            function initStockfish() {
+                if (!stockfish) {
+                    stockfish = new Worker(
+                        'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                    stockfish.onmessage = function(e) {
+                        const line = e.data;
+                        if (line.startsWith('bestmove')) {
+                            const parts = line.split(' ');
+                            const move = parts[1];
+                            if (window._aiResolve) {
+                                const cb = window._aiResolve;
+                                window._aiResolve = null;
+                                cb(move);
+                            }
+                        }
+                        if (analysisMode && line.startsWith('info depth')) {
+                            const parts = line.split(' ');
+                            let score = '',
+                                bestMove = '';
+                            for (let i = 0; i < parts.length; i++) {
+                                if (parts[i] === 'score') score = parts[i + 2];
+                                if (parts[i] === 'pv') { bestMove = parts.slice(i + 1, i + 6).join(' '); break; }
+                            }
+                            if (score) {
+                                const evalText = score.startsWith('mate') ? `#${score.split(' ')[1]}` :
+                                    `${(parseInt(score)/100).toFixed(2)}`;
+                                analysisBox.innerHTML = `
+                                        <div><span class="eval">Eval: ${evalText}</span></div>
+                                        <div><span class="best-move">Best: ${bestMove || '…'}</span></div>
+                                    `;
+                            }
+                        }
+                    };
+                }
+            }
+
+            function runStockfishAnalysis() {
+                if (!analysisMode) {
+                    analysisBox.innerHTML = '<span class="empty">🔍 Analysis disabled.</span>';
+                    return;
+                }
+                if (!stockfish) initStockfish();
+                stockfish.postMessage('ucinewgame');
+                stockfish.postMessage('position fen ' + game.fen());
+                stockfish.postMessage('go movetime 1200');
+            }
+
+            // ─── MOVES LIST ───
+            function renderMoves() {
+                movesListEl.innerHTML = '';
+                const history = game.history({ verbose: true });
+                let html = '';
+                for (let i = 0; i < history.length; i += 2) {
+                    const num = Math.floor(i / 2) + 1;
+                    const w = history[i];
+                    const b = history[i + 1];
+                    const wSan = w ? w.san : '';
+                    const bSan = b ? b.san : '';
+                    const wClass = (i === history.length - 1 && game.turn() === 'b') ? ' current' : '';
+                    const bClass = (i + 1 === history.length - 1 && game.turn() === 'w') ? ' current' : '';
+                    html += `<div class="move-row" data-index="${i}">
+                                <span class="move-num">${num}.</span>
+                                <span class="move-text white-move${wClass}">${wSan}</span>
+                                <span class="move-text black-move${bClass}">${bSan}</span>
+                             </div>`;
+                }
+                movesListEl.innerHTML = html;
+                movesListEl.querySelectorAll('.move-row').forEach(row => {
+                    row.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        const h = game.history({ verbose: true });
+                        if (idx >= h.length) return;
+                        const tmp = new Chess();
+                        for (let i = 0; i <= idx; i++) {
+                            const m = h[i];
+                            if (m) tmp.move({ from: m.from, to: m.to, promotion: m.promotion || 'q' });
+                        }
+                        board.position(tmp.fen());
+                        lastMove = h[idx] || null;
+                        highlightLegalMoves();
+                    });
+                });
+                moveCountEl.textContent = history.length;
+                movesListEl.scrollTop = movesListEl.scrollHeight;
+            }
+
+            // ─── HIGHLIGHT ───
+            function highlightLegalMoves() {
+                document.querySelectorAll('.square-55d63').forEach(el => {
+                    el.classList.remove('highlight1-32417', 'highlight2-9c5d2');
+                });
+                if (selectedSquare) {
+                    const moves = game.moves({ square: selectedSquare, verbose: true });
+                    moves.forEach(m => {
+                        const el = document.querySelector(`[data-square="${m.to}"]`);
+                        if (el) el.classList.add('highlight1-32417');
+                    });
+                }
+                if (lastMove) {
+                    const fromEl = document.querySelector(`[data-square="${lastMove.from}"]`);
+                    const toEl = document.querySelector(`[data-square="${lastMove.to}"]`);
+                    if (fromEl) fromEl.classList.add('highlight2-9c5d2');
+                    if (toEl) toEl.classList.add('highlight2-9c5d2');
+                }
+            }
+
+            // ─── RESET ───
+            function resetGame() {
+                stopClock();
+                game = new Chess();
+                moveHistory = [];
+                gameOver = false;
+                lastMove = null;
+                selectedSquare = null;
+                isAIThinking = false;
+                const control = document.getElementById('timeControl').value;
+                if (control === 'custom') {
+                    const mins = parseInt(document.getElementById('minutesInput').value) || 10;
+                    const inc = parseInt(document.getElementById('incrementInput').value) || 0;
+                    whiteTime = mins * 60;
+                    blackTime = mins * 60;
+                    increment = inc;
+                } else {
+                    const parts = control.split(',').map(Number);
+                    whiteTime = parts[0] || 180;
+                    blackTime = parts[0] || 180;
+                    increment = parts[1] || 0;
+                }
+                currentTurn = 'w';
+                updateClocks();
+                board.position('start');
+                renderMoves();
+                whitePlayerEl.classList.add('active');
+                blackPlayerEl.classList.remove('active');
+                startClock();
+                setStatus('White to move');
+                analysisBox.innerHTML = '<span class="empty">♟ Make a move to see analysis.</span>';
+                if (stockfish) stockfish.postMessage('stop');
+                if (aiColor === 'b' && game.turn() === 'b' && !gameOver) {
+                    scheduleAIMove();
+                }
+            }
+
+            // ─── UNDO ───
+            function undoMove() {
+                if (gameOver || isAIThinking) return;
+                const h = game.history({ verbose: true });
+                if (h.length === 0) return;
+                game.undo();
+                if (h.length > 1) game.undo();
+                board.position(game.fen());
+                renderMoves();
+                switchClock();
+                if (analysisMode) runStockfishAnalysis();
+                selectedSquare = null;
+                highlightLegalMoves();
+            }
+
+            // ─── FLIP ───
+            function flipBoard() { board.flip(); }
+
+            // ─── RESIGN ───
+            function resign() {
+                if (gameOver) return;
+                const winner = game.turn() === 'w' ? 'Black' : 'White';
+                setStatus(`🏳 ${winner} wins by resignation.`, true);
+                gameOver = true;
+                stopClock();
+                playSound('gameEnd');
+            }
+
+            // ─── DRAW ───
+            function offerDraw() {
+                if (gameOver) return;
+                setStatus('🤝 Draw agreed.', true);
+                gameOver = true;
+                stopClock();
+                playSound('gameEnd');
+            }
+
+            // ─── PGN ───
+            function copyPGN() {
+                const pgn = game.pgn();
+                navigator.clipboard.writeText(pgn).then(() => alert('PGN copied!'))
+                    .catch(() => {
+                        const ta = document.createElement('textarea');
+                        ta.value = pgn;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        alert('PGN copied!');
+                    });
+            }
+
+            // ─── IMPORT PGN ───
+            function showImportModal() {
+                importModal.classList.add('active');
+                pgnInput.value = '';
+            }
+
+            function loadPGN() {
+                const pgn = pgnInput.value.trim();
+                if (!pgn) return;
+                try {
+                    const ng = new Chess();
+                    ng.load_pgn(pgn);
+                    if (ng.history().length === 0) throw new Error('No moves');
+                    game = ng;
+                    moveHistory = game.history({ verbose: true });
+                    board.position(game.fen());
+                    renderMoves();
+                    gameOver = false;
+                    switchClock();
+                    startClock();
+                    importModal.classList.remove('active');
+                    if (analysisMode) runStockfishAnalysis();
+                    if (game.turn() === aiColor) scheduleAIMove();
+                } catch (e) {
+                    alert('Invalid PGN: ' + e.message);
+                }
+            }
+
+            // ─── TOGGLE ANALYSIS ───
+            function toggleAnalysis() {
+                analysisMode = !analysisMode;
+                const btn = document.getElementById('btnAnalyze');
+                if (analysisMode) {
+                    initStockfish();
+                    runStockfishAnalysis();
+                    btn.classList.add('btn-primary');
+                    btn.textContent = '🔍 Stop';
+                } else {
+                    btn.classList.remove('btn-primary');
+                    btn.textContent = '🔍 Analyze';
+                    if (stockfish) stockfish.postMessage('stop');
+                    analysisBox.innerHTML = '<span class="empty">♟ Analysis paused.</span>';
+                }
+            }
+
+            // ─── CLICK ON SQUARE ───
+            document.addEventListener('click', function(e) {
+                const sq = e.target.closest('.square-55d63');
+                if (sq) {
+                    const square = sq.dataset.square;
+                    if (square) {
+                        const piece = game.get(square);
+                        if (piece && piece.color === playerColor && !gameOver && !isAIThinking) {
+                            selectedSquare = square;
+                            highlightLegalMoves();
+                        } else if (selectedSquare) {
+                            const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+                            if (move) {
+                                handleMove(move);
+                                selectedSquare = null;
+                                highlightLegalMoves();
+                            } else {
+                                selectedSquare = null;
+                                highlightLegalMoves();
+                            }
+                        }
+                    }
+                } else {
+                    if (!e.target.closest('.promotion-dialog') && !e.target.closest('.modal-overlay')) {
+                        selectedSquare = null;
+                        highlightLegalMoves();
+                    }
+                }
+            });
+
+            // ─── CUSTOM TIME TOGGLE ───
+            document.getElementById('timeControl').addEventListener('change', function() {
+                const custom = document.getElementById('customTimeInputs');
+                if (this.value === 'custom') {
+                    custom.style.display = 'inline-flex';
+                } else {
+                    custom.style.display = 'none';
+                }
+                resetGame();
+            });
+            document.getElementById('minutesInput').addEventListener('change', resetGame);
+            document.getElementById('incrementInput').addEventListener('change', resetGame);
+            document.getElementById('aiLevel').addEventListener('change', function() {
+                aiLevel = parseInt(this.value);
+            });
+
+            // ─── BUTTON EVENTS ───
+            document.getElementById('btnFlip').addEventListener('click', flipBoard);
+            document.getElementById('btnUndo').addEventListener('click', undoMove);
+            document.getElementById('btnResign').addEventListener('click', resign);
+            document.getElementById('btnDraw').addEventListener('click', offerDraw);
+            document.getElementById('btnNew').addEventListener('click', resetGame);
+            document.getElementById('btnPGN').addEventListener('click', copyPGN);
+            document.getElementById('btnImportPGN').addEventListener('click', showImportModal);
+            document.getElementById('btnAnalyze').addEventListener('click', toggleAnalysis);
+            document.getElementById('btnApplyTheme').addEventListener('click', applyPieceTheme);
+            document.getElementById('btnScrollToEnd').addEventListener('click', () => {
+                movesListEl.scrollTop = movesListEl.scrollHeight;
+            });
+            document.getElementById('importCancel').addEventListener('click', () => importModal.classList.remove('active'));
+            document.getElementById('importConfirm').addEventListener('click', loadPGN);
+
+            // ─── KEYBOARD SHORTCUTS ───
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'r' || e.key === 'R') resetGame();
+                if (e.key === 'f' || e.key === 'F') flipBoard();
+                if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    undoMove();
+                }
+                if (e.key === 'a' || e.key === 'A') toggleAnalysis();
+                if (e.key === 'p' || e.key === 'P') copyPGN();
+                if (e.key === 'i' || e.key === 'I') showImportModal();
+                if (e.key === 'Escape') {
+                    importModal.classList.remove('active');
+                    promotionDialog.classList.remove('active');
+                }
+            });
+
+            // ─── INIT ───
+            initBoard();
+            resetGame();
+            console.log('♚ Lichess Open Source Clone loaded.');
+
+        })();
+    </script>
+</body>
+</html>
